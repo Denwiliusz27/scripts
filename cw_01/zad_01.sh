@@ -6,6 +6,10 @@ help() {
   echo "~~~~~~~~~~~~~~~~~~~~~~~~ OPIS ~~~~~~~~~~~~~~~~~~~~~~~~~~~"
   echo "~ Skrypt ma za zadanie wyświetlenie na ekranie"
   echo "~ loginu oraz imienia i nazwiska zalogowanego użytkownika"
+  echo "~"
+  echo "~ Użycie: bash zad_01.sh [-h --help] [-q --quiet]"
+  echo "~ -h --help: wyświetla opis"
+  echo "~ -q --quiet: kończy działanie programu"
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
   echo
 }
