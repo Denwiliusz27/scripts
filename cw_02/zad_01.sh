@@ -10,15 +10,6 @@ do
     do
         a=$(($i*$j))
         printf "%2d " $a  #"$a "
-
-##        echo 'a:' $a , ' dl a = ' ${#a}
-#
-#        if [ ${#a} -gt $len ]
-#        then
-#          len=${#a}
-#        fi
-#
-#        printf "%${len}d " $a
     done
     printf "\n"
 done

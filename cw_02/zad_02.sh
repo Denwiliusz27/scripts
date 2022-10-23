@@ -72,6 +72,7 @@ else
 
     else  # jeśli argument nie jest numerem, wyświetl komunikat błędu
       single_arg_error $1
+      exit 1
     fi
 
   else
@@ -84,9 +85,11 @@ else
         fi
       else
         single_arg_error $2
+        exit 1
       fi
     else
       single_arg_error $1
+      exit 1
     fi
   fi
 fi
