@@ -21,9 +21,9 @@ else if ($#argv == 1) then
         exit 0
     else
        set ping_result = `ping -c 1 -w 1 $1`
-       echo $ping_result
+       set SUCCESS=$?
 
-       if ( $? == 0 ) then
+       if ( $SUCCESS == 0 ) then
          echo $1 'żywy'
          exit 1
        else
@@ -42,6 +42,7 @@ else if ($#argv == 2) then
         echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
         echo
         exit 0
+
     else
         set is_ip_correct = `tcsh valid_ip.csh $2`
         if ( $is_ip_correct == 0) then
@@ -51,8 +52,8 @@ else if ($#argv == 2) then
             echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
             echo
             exit 0
-        else
 
+        else
             set ip1 = `echo $1 | cut -d '.' -f 1`
             set ip2 = `echo $1 | cut -d '.' -f 2`
             set ip3 = `echo $1 | cut -d '.' -f 3`
@@ -72,35 +73,44 @@ else if ($#argv == 2) then
                     set ping_1_arr = ( $ping_2_arr[1] $ping_2_arr[2] $ping_2_arr[3] $ping_2_arr[4] )
                     set ping_2_arr = ( $temp[1] $temp[2] $temp[3] $temp[4] )
                     break;
-                else if ($ping_1_arr[$i] > $ping_2_arr[$i]) then
+                else if ($ping_1_arr[$i] < $ping_2_arr[$i]) then
                     break;
                 endif
                 set i = `expr $i + 1`
             end
 
-            echo 'ping1: ' $ping_1_arr
-            echo 'ping2: ' $ping_2_arr
-
-
-
-
             set ping_1 = `echo $ping_1_arr[1]'.'$ping_1_arr[2]'.'$ping_1_arr[3]'.'$ping_1_arr[4]`
-            echo 'ping_1: ' $ping_1
-#
+            set ping_2 = `echo $ping_2_arr[1]'.'$ping_2_arr[2]'.'$ping_2_arr[3]'.'$ping_2_arr[4]`
+
             set ping_result = `ping -c 1 -w 1 $ping_1`
+            set SUCCESS=$?
 
-            echo $ping_result
-
-            if ( $? == 0 ) then
+            if ( $SUCCESS == 0 ) then
               echo $ping_1 'żywy'
             else
               echo $ping_1 'martwy'
-              exit 0
             endif
 
+            while ( $ping_1 != $ping_2)
+                set i = 4
 
+                while ( $ping_1_arr[$i] == 255 )
+                    set ping_1_arr[$i] = 0
+                    set i = `expr $i - 1`
+                end
 
+                set ping_1_arr[$i] = `expr $ping_1_arr[$i] + 1`
+                set ping_1 = `echo $ping_1_arr[1]'.'$ping_1_arr[2]'.'$ping_1_arr[3]'.'$ping_1_arr[4]`
 
+                set ping_result = `ping -c 1 -w 1 $ping_1`
+                set SUCCESS=$?
+
+                if ( $SUCCESS == 0 ) then
+                  echo $ping_1 'żywy'
+                else
+                  echo $ping_1 'martwy'
+                endif
+            end
         endif
     endif
 endif
