@@ -1,6 +1,12 @@
 #!/usr/bin/perl -s
 #Daniel Wielgosz (g1)
 
+use Cwd qw( abs_path );
+use File::Basename qw( dirname );
+use lib dirname(abs_path($0));
+
+use checkNumber;
+
 @files = ();
 $w_word_c = 0 ;
 $w_line_c = 0 ;
@@ -40,10 +46,10 @@ for(my $nr=0; $nr < $files_nr; $nr++){
         foreach my $word (@new_line){
             $word_c += 1;
 
-            if ($word =~  /^[+-]?\d+$/){
+            if(checkInteger($word)){
                 $integer_c += 1;
                 $all_numbers += 1;
-            } elsif ($word =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([EeQqDd^]([+-]?\d+))?$/){
+            } elsif (checkOther($word)){
                 $all_numbers += 1;
             }
         }
@@ -57,7 +63,7 @@ for(my $nr=0; $nr < $files_nr; $nr++){
         $w_all_numbers += $all_numbers;
     }
 
-    printf("\nFile: %s -- lines: %d, words: %d, characters: %d", @files[$i], $line_c, $word_c, $char_c);
+    printf("\nFile: %s -- lines: %d, words: %d, characters: %d", @files[$nr], $line_c, $word_c, $char_c);
     if ($i){
         printf(", integers: %d", $integer_c);
     }
@@ -65,7 +71,6 @@ for(my $nr=0; $nr < $files_nr; $nr++){
         printf(", all numbers: %d", $all_numbers);
     }
     printf("\n");
-
 }
 
 if ($files_nr > 1){
