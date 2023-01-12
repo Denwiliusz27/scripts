@@ -1,0 +1,103 @@
+#!/usr/bin/python3
+#Krzysztof Banski
+
+import re
+import sys
+
+def GetWords(line):
+    return line.split()   
+def GetNumbers(words):
+    r = re.compile("^[+-]?[0-9]+([eEdDqQ^][+-]?[0-9]+)?$")
+    return list(filter(r.match, words))
+def GetWholeNumbers(words):
+    r = re.compile("^[+-]?[0-9]+$")
+    return list(filter(r.match, words))
+
+ignoreComments = False
+countNumbers = False
+countWholeNumbers = False
+
+if __name__ == "__main__":
+    files = []
+    args = sys.argv[1:]
+
+    for i, arg in enumerate(args):
+        if(arg == "-d"):
+            countNumbers = True
+        elif(arg == "-i"):
+            countWholeNumbers = True
+        elif(arg == "-e"):
+            ignoreComments = True
+        else:
+            files.append(arg)
+    
+    fileCount = 0
+    wordCountGlobal = 0
+    newLineCountGlobal = 0
+    charCountGlobal = 0
+
+    wordCount = 0
+    newLineCount = 0
+    charCount = 0
+
+    numbersCountGlobal = 0
+    numbersCount = 0
+    numbersWholeCountGlobal = 0
+    numbersWholeCount = 0
+
+    for file in files:
+        try:
+            fileHandle = open(file, 'r')
+        except IOError:
+            print("File {", file, "} cannot be openned!")
+        else:
+            with fileHandle:
+                
+                lines = fileHandle.readlines()
+                for line in lines:
+                    if(ignoreComments and line.startswith("#")): continue
+
+                    charCount += len(line)
+
+                    words = GetWords(line)
+                    wordCount += len(words)
+
+                    numbers = GetNumbers(words)
+                    numbersCount += len(numbers)
+
+                    numbersWhole = GetWholeNumbers(words)
+                    numbersWholeCount += len(numbersWhole)
+
+                    if(line.endswith("\n")):
+                        newLineCount += 1;  
+
+        if(countWholeNumbers):
+            print(numbersWholeCount, " liczb calkowitych razem, ", file);  
+        elif (countNumbers):
+            print(numbersCount, " liczb razem, ", file)
+        else:
+            print(newLineCount, " ", wordCount, " ",  charCount, " razem, ", file)
+
+        wordCountGlobal += wordCount
+        newLineCountGlobal += newLineCount
+        charCountGlobal += charCount
+
+        numbersCountGlobal += numbersCount
+        numbersWholeCountGlobal += numbersWholeCount
+
+        wordCount = 0
+        newLineCount = 0
+        charCount = 0
+
+        numbersCount = 0
+        numbersWholeCount = 0
+
+        fileCount += 1
+
+    if(fileCount > 1):
+        if(countWholeNumbers == 1):
+            print(numbersWholeCountGlobal, " liczb calkowitych razem")
+        elif (countNumbers):
+            print(numbersCountGlobal, " liczb razem")
+        else:
+            print(newLineCountGlobal, " ", wordCountGlobal, " ", charCountGlobal, " razem")  

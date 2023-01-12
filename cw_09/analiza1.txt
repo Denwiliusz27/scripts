@@ -1,0 +1,14 @@
+Test 1 wykonano dla pliku tekstowego o rozmiarze 105 MB
+Czas wykonania programu na tym pliku:
+- Python: 6,79 s
+- Perl: 2,54 s
+
+Test 2 przeprowadzono na pliku o rozmiarze 112 MB
+Czas wykonania programu na tym pliku:
+- Python: 1,72 s
+- Perl: 0,45 s
+
+
+W obu przypadkach widać, że skrypt w Perl'u wykonuje się kilkukrotnie szybciej od skryptu w
+Pythonie. Można z tego wyciągnąć wniosek iż jest on lepiej przystosowany do wykonywania
+ operacji na plikach.
