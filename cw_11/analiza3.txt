@@ -1,0 +1,8 @@
+Test wykonano dla pliku tekstowego o ilości linii równej 520 tys.
+Czas wykonania programu na tym pliku:
+- Python: 15,86 s
+- Perl: 13,26 s
+
+Można zauważyć, że skrypt w Perl'u wykonał się o kilka sekund szybciej od kodu w Pythonie. 
+Można z tego wyciągnąć wniosek iż jest on lepiej przystosowany do wykonywania operacji na plikach,
+a słowniki w Perlu działają bardziej efektywnie od tych Pythonowych.

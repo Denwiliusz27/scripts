@@ -1,0 +1,3 @@
+test dla d ~/SKRYPTY/ for foreach ARGV
+python - 3.662
+perl - 4.522

@@ -4,6 +4,10 @@
 import sys, os
 
 
+# fragment do testów
+# f = open(os.devnull, 'w')
+# sys.stdout = f
+
 def count(my_file, paths, key, results):
     for line in my_file:
         for word in paths[key]:
