@@ -12,25 +12,21 @@ temp_patterns=()
 for ((i=2;i<=$#;i++));
 do
 #  echo "$#" "$i" "${!i}";
-  echo "$i" "${!i}";
-  echo "wz = $wz"
+#  echo "$i" "${!i}";
+#  echo "wz = $wz"
   a=$((i-1))
   b=$((i-2))
 
   if [ "${!a}" == "-d" ]; then
     temp_paths+=(${!i})
-    echo "dl: ${#temp_paths[@]}"
-    echo "${temp_paths[${#temp_paths[@]}-1]}"
 
     if [ ! "${paths[${!i}]}" ]; then
-#      echo "${!i} nie jest w paths"
       paths[${!i}]=temp[@]
     fi
 
-    if [ ! "${results[${!i}]}" ]; then
-      results[${!i}]=results_inner
-#      echo "pusty slownik"
-    fi
+#    if [ ! "${results[${!i}]}" ]; then
+#      results[${!i}]=results_inner
+#    fi
 
   elif [ "${!i}" == "-d" ] && [ "$wz" = true ]; then
     if [ $i -gt 1 ] && [ "${!b}" != "-d" ]; then
@@ -38,65 +34,77 @@ do
       do
         printf -v array_str '%q ' "${temp_patterns[@]}"
         paths[$key]=$array_str
-        echo "dopisalem: $array_str "
-        echo "dopisalem do $key : $array_str "
+#        echo "dopisalem: $array_str "
+#        echo "dopisalem do $key : $array_str "
       done
     fi
 
     wz=false
     temp_paths=()
     temp_patterns=()
-    echo "usuwam"
+#    echo "usuwam"
 
   elif [[ "${!b}" == "-d" && "${!a}" != "-d" && "${!i}" != "-d" ]] || [[ "$wz" = true && "${!i}" != "-d" ]]; then
     wz=true
-
-#    for key in "${temp_paths[@]}";
-#    do
-#      printf -v temp_patterns
-    echo "dodaje ${!i}"
+#    echo "dodaje ${!i}"
     temp_patterns+=( ${!i} )
-#    done
   fi
 done
-echo "~~~~~~~~~~~~~~~~~~"
 
 for key in "${temp_paths[@]}";
 do
-  echo "dopisuje tablice do $key"
+#  echo "dopisuje tablice do $key"
   printf -v array_str '%q ' "${temp_patterns[@]}"
   paths[$key]=$array_str #(${temp_patterns[@]});
-  echo "dopisalem do $key : $array_str "
+#  echo "dopisalem do $key : $array_str "
 done
-
-
-tablica=()
 
 for key in "${!paths[@]}"; do
-    echo "~~~~~~~~~~~~~~~~~~"
-    echo "Key: $key"
+  results=()
 
-    printf -v array_cmd "%q=( %s )" "$tablica" "${paths[$key]}"
-    eval "$tablica"
-
-    echo " to jest : ${paths[$key]}"
-
+  if [ -e "$key" ]; then
+    IFS=$'\n'
+    files=($(find $key -type f))
     IFS=' '
-    new_array=(${paths[$key]})
-    echo "Array: ${new_array[@]}"
+    words=(${paths[$key]})
+#    echo "len: ${#files[@]}"
 
-#    for value in "${paths[$key][@]}"; do
-#        echo "Value: $value"
-#    done
+    for file in "${files[@]}"; do
+#      echo "~~~~~~~~~~~~~~~~~~"
+#      echo "file: $file"
+#      echo "array: ${words[@]}"
+
+      while IFS= read -r line; do
+        # Do something with the line
+#        echo "$line"
+
+        for word in "${words[@]}"; do
+          word="$(echo -e "${word}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          count=$(($(echo $line | awk -v string="$word" '{print gsub(string,"&")}')))
+
+
+          if [ $count -gt 0 ]; then
+            if [[ -v results[$word] ]]; then
+              results[$word]=$((results[$word] + $count))
+            else
+              results[$word]=$count
+            fi
+          fi
+        done
+      done < "$file"
+
+    done
+
+    echo "$key: "
+    for word in "${!results[@]}"; do
+      echo "  $word - ${results[$word]}"
+    done
+
+
+  else
+    echo "ERROR - ścieżka '$key' nie istnieje"
+    exit 1
+  fi
+
+
 done
-
-
-
-#echo "dopisuje tablice do $key"
-#for key in "${temp_paths[@]}";
-#do
-#  paths[$key]=(${temp_patterns[@]});
-#done
-
-
-
