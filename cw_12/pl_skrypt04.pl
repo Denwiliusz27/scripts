@@ -9,6 +9,9 @@ sub collect_files {
     push @files, $file if (-f $file);
 }
 
+# fragment do testów
+# open (STDOUT, ">/dev/null");
+
 $wz = 0;
 @temp_paths = [];
 %paths = ();
@@ -46,11 +49,14 @@ foreach my $key (keys %paths){
                 foreach $word (@{$paths{$key}}){
                     $count = () = $_ =~ /$word/g;
 
-                    if ($count >= 1){
-                        # print "jest $count : $_";
-                        if (not(exists($results{$key}{$word}))){
+                    if (not(exists($results{$key}{$word}))){
+                        if ($count >= 1) {
                             $results{$key}{$word} = $count;
-                        } else{
+                        } else {
+                            $results{$key}{$word} = 0;
+                        }
+                    } else{
+                        if ($count >= 1) {
                             $results{$key}{$word} += $count;
                         }
                     }

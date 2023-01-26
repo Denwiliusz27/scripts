@@ -1,3 +1,8 @@
-test dla d ~/SKRYPTY/ for foreach ARGV
-python - 3.662
-perl - 4.522
+Testy przeprowadzono na 14 folderach. Wyniki czasu pracy skryptów na tym zbiorze prezentują
+się następująco:
+- python: 0,092 s
+- perl: 0,153 s
+- bash: 50,224 s
+Na podstawie powyższych wyników widać, że kod pythonowy i perlowy działają porównywalnie
+szybko, natomiast kod bashowy wykonuje się kilkadziesiąt razy wolniej. Wynika stąd, że
+jest on mniej przystosowany do pracy na plikach.

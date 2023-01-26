@@ -3,7 +3,6 @@
 
 import sys, os
 
-
 # fragment do testów
 # f = open(os.devnull, 'w')
 # sys.stdout = f
@@ -11,13 +10,14 @@ import sys, os
 def count(my_file, paths, key, results):
     for line in my_file:
         for word in paths[key]:
-            if str(line).count(str(word)) > 0:
-                # print("jest", str(line).count(str(word)), ": ", line)
-                if word not in results[key]:
+            if word not in results[key]:
+                if str(line).count(str(word)) > 0:
                     results[key][word] = str(line).count(str(word))
                 else:
+                    results[key][word] = 0
+            else:
+                if str(line).count(str(word)) > 0:
                     results[key][word] += str(line).count(str(word))
-
 
 paths = {}
 results = {}
