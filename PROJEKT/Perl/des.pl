@@ -4,6 +4,13 @@
 use utf8;
 binmode(STDOUT, "encoding(UTF-8)");
 
+# use Cwd qw( abs_path );
+# use File::Basename qw( dirname );
+# use lib dirname(abs_path($0));
+#
+# use helper;
+
+
 my @SBox0 = ([14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
          [0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8],
          [4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0],
@@ -45,11 +52,19 @@ my @SBox7 = ([13, 2, 8, 4, 6, 15, 11, 1, 10, 9, 3, 14, 5, 0, 12, 7],
          [2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11]);
 
 
-# use Cwd qw( abs_path );
-# use File::Basename qw( dirname );
-# use lib dirname(abs_path($0));
-#
-# use helper;
+sub permute {
+    my($temp, @perm) = @_;
+    my @txt = split("", $temp);
+    my $permuted = '';
+
+    for my $i (@perm){
+        $permuted = $permuted . $txt[$i];
+    }
+    # printf("permuted: '%s'\n", $permuted)
+    return $permuted;
+}
+
+
 
 sub main {
 
@@ -70,11 +85,8 @@ sub main {
         while(<FH>) {
             foreach $char (split('', $_)){
                 if (length(@blocks[$nr]) == 64){
-                    # printf("blok %d : '%s'\n", length(@blocks[$nr]), @blocks[$nr]);
                     $nr += 1;
                 }
-                # printf("char: '%s' - %.16b\n", $char, ord($char));
-
                 @blocks[$nr] = @blocks[$nr] . sprintf("%.16b", ord($char));
             }
 
@@ -86,9 +98,9 @@ sub main {
             }
         }
 
-        for my $el (@blocks) {
-            printf("el: %s\n", $el)
-        }
+
+
+
 
         close FH;
     }
@@ -97,4 +109,14 @@ sub main {
 main();
 my @temp = @SBox0[2];
 
-print("sbox: $SBox1[1][0]\n");
+my @array = (1,0,2,3);
+permute('abcd', @array);
+my @array = (3,2,1,0);
+permute('abcd', @array);
+my @array = (0,1,2,3,0);
+permute('abcd', @array);
+my @array = (0,1,3,2,0,3);
+permute('1100', @array);
+my @array = (0,2,1);
+permute('1100', @array );
+
