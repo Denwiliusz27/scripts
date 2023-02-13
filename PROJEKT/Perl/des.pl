@@ -65,6 +65,26 @@ sub permute {
 }
 
 
+sub xor_binaries {
+    my $result = '';
+    my @bin1 = split("", $_[0]);
+    my @bin2 = split("", $_[1]);
+
+    # printf("len: %d\n", length($bin1));
+    for $i (0..(scalar @bin1 -1)){
+        if ($bin1[$i] == $bin2[$i]){
+            $result = $result . '0';
+        } else {
+            $result = $result . '1';
+        }
+    }
+
+
+
+    printf("%s\n", $result)
+    # return $result;
+}
+
 
 sub main {
 
@@ -107,16 +127,10 @@ sub main {
 }
 
 main();
-my @temp = @SBox0[2];
 
-my @array = (1,0,2,3);
-permute('abcd', @array);
-my @array = (3,2,1,0);
-permute('abcd', @array);
-my @array = (0,1,2,3,0);
-permute('abcd', @array);
-my @array = (0,1,3,2,0,3);
-permute('1100', @array);
-my @array = (0,2,1);
-permute('1100', @array );
+xor_binaries('0','0');
+xor_binaries('1','1');
+xor_binaries('01','11');
+xor_binaries('1101','1111');
+xor_binaries('11111','11111');
 
