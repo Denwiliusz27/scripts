@@ -71,7 +71,7 @@ sub permute {
     for my $i (@perm){
         $permuted = $permuted . $txt[$i];
     }
-    # printf("permuted: '%s'\n", $permuted)
+
     return $permuted;
 }
 
@@ -89,7 +89,6 @@ sub xor_binaries {
         }
     }
 
-    # printf("%s\n", $result)
     return $result;
 }
 
@@ -119,24 +118,27 @@ sub shift_left {
 sub key_schedule {
     my @subkeys = ();
     my $key = $_[0];
-    my $new_key = permute($key, @PC1);
 
+    my $new_key = permute($key, @PC1);
     my $l_key = substr($new_key, 0, length($new_key)/2);
     my $r_key = substr($new_key, length($new_key)/2, length($new_key));
 
     for $i (0..(scalar @shift_table - 1)){
         my $new_subkey = '';
 
-        my $l_subkey = shift_left($shift_table[$i], $l_key);
-        my $r_subkey = shift_left($shift_table[$i], $r_key);
+        $l_key= shift_left($shift_table[$i], $l_key);
+        $r_key = shift_left($shift_table[$i], $r_key);
+        $new_subkey = $l_key . $r_key;
 
-        $new_subkey = $l_subkey . $r_subkey;
-
-        push @subkeys, $new_subkey;
+        push @subkeys, permute($new_subkey, @PC2);
     }
 
-    printf("subkeys: ");
-    print @subkeys, "\n";
+    # printf("subkeys: \n");
+    # for $i (0.. (scalar @subkeys - 1)){
+    #     printf("%s\n", @subkeys[$i]);
+    # }
+
+    return @subkeys
 }
 
 
@@ -182,7 +184,8 @@ sub main {
 
 main();
 
-key_schedule('1010101010111011000010010001100000100111001101101100110011011101');
+my @keys = key_schedule('1010101010111011000010010001100000100111001101101100110011011101');
+
 
 # my @array = (1,2,3,4);
 # shift_left(2, '1234');
