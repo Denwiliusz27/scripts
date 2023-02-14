@@ -10,6 +10,15 @@ binmode(STDOUT, "encoding(UTF-8)");
 #
 # use helper;
 
+my @PC1 = (56, 48, 40, 32, 24, 16,  8,  0, 57, 49, 41, 33, 25, 17,  9,  1, 58,
+       50, 42, 34, 26, 18, 10,  2, 59, 51, 43, 35, 62, 54, 46, 38, 30, 22,
+       14,  6, 61, 53, 45, 37, 29, 21, 13,  5, 60, 52, 44, 36, 28, 20, 12,
+        4, 27, 19, 11,  3);
+
+my @PC2 = (13, 16, 10, 23,  0,  4,  2, 27, 14,  5, 20,  9, 22, 18, 11,  3,
+       25, 7, 15,  6, 26, 19, 12,  1, 40, 51, 30, 36, 46, 54, 29, 39,
+       50, 44, 32, 47, 43, 48, 38, 55, 33, 52, 45, 41, 49, 35, 28, 31);
+
 
 my @SBox0 = ([14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
          [0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8],
@@ -51,6 +60,8 @@ my @SBox7 = ([13, 2, 8, 4, 6, 15, 11, 1, 10, 9, 3, 14, 5, 0, 12, 7],
          [7, 11, 4, 1, 9, 12, 14, 2, 0, 6, 10, 13, 15, 3, 5, 8],
          [2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11]);
 
+my @shift_table = (1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1 );
+
 
 sub permute {
     my($temp, @perm) = @_;
@@ -70,7 +81,6 @@ sub xor_binaries {
     my @bin1 = split("", $_[0]);
     my @bin2 = split("", $_[1]);
 
-    # printf("len: %d\n", length($bin1));
     for $i (0..(scalar @bin1 -1)){
         if ($bin1[$i] == $bin2[$i]){
             $result = $result . '0';
@@ -79,10 +89,54 @@ sub xor_binaries {
         }
     }
 
+    # printf("%s\n", $result)
+    return $result;
+}
 
 
-    printf("%s\n", $result)
-    # return $result;
+sub shift_left {
+    my @string = split("", $_[1]);
+    my $n = $_[0];
+
+    for $i (1..$n){
+        my $temp = @string[0];
+
+        for $j (0..(scalar @string - 1)){
+            if ($j == (scalar @string - 1)){
+                @string[$j] = $temp;
+            } else {
+                @string[$j] = @string[$j+1];
+            }
+        }
+
+    }
+
+    my $result = join '', @string;
+    return $result;
+}
+
+
+sub key_schedule {
+    my @subkeys = ();
+    my $key = $_[0];
+    my $new_key = permute($key, @PC1);
+
+    my $l_key = substr($new_key, 0, length($new_key)/2);
+    my $r_key = substr($new_key, length($new_key)/2, length($new_key));
+
+    for $i (0..(scalar @shift_table - 1)){
+        my $new_subkey = '';
+
+        my $l_subkey = shift_left($shift_table[$i], $l_key);
+        my $r_subkey = shift_left($shift_table[$i], $r_key);
+
+        $new_subkey = $l_subkey . $r_subkey;
+
+        push @subkeys, $new_subkey;
+    }
+
+    printf("subkeys: ");
+    print @subkeys, "\n";
 }
 
 
@@ -128,9 +182,10 @@ sub main {
 
 main();
 
-xor_binaries('0','0');
-xor_binaries('1','1');
-xor_binaries('01','11');
-xor_binaries('1101','1111');
-xor_binaries('11111','11111');
+key_schedule('1010101010111011000010010001100000100111001101101100110011011101');
 
+# my @array = (1,2,3,4);
+# shift_left(2, '1234');
+# shift_left(3, '1234');
+# my @array = (1,2,3,4,5,6);
+# shift_left(2, '123456');
