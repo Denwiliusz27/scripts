@@ -31,6 +31,11 @@ my @E = (31, 0, 1, 2, 3, 4, 3, 4, 5, 6, 7, 8, 7, 8, 9, 10, 11,
 my @P = (15, 6, 19, 20, 28, 11, 27, 16, 0, 14, 22, 25, 4, 17, 30, 9, 1,
      7, 23, 13, 31, 26, 2, 8, 18, 12, 29, 5, 21, 10, 3, 24);
 
+my @FP = (39,  7, 47, 15, 55, 23, 63, 31, 38,  6, 46, 14, 54, 22, 62, 30, 37,
+        5, 45, 13, 53, 21, 61, 29, 36,  4, 44, 12, 52, 20, 60, 28, 35,  3,
+       43, 11, 51, 19, 59, 27, 34,  2, 42, 10, 50, 18, 58, 26, 33,  1, 41,
+        9, 49, 17, 57, 25, 32,  0, 40,  8, 48, 16, 56, 24);
+
 my @SBox0 = ([14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
          [0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8],
          [4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0],
@@ -198,11 +203,39 @@ sub F {
     return $final;
 }
 
+
+sub Feistel {
+    my($message, @subkeys) = @_;
+    $length = int(length($message) / 2);
+
+    $l_msg = substr($message, 0, $length);
+    $r_msg = substr($message, $length, $length);
+
+    for $i (0..15){
+        $r_msg_f = F($r_msg, $subkeys[$i]);
+
+        $l_xor = xor_binaries($l_msg, $r_msg_f);
+
+        if ($i < 15){
+            $l_msg = $r_msg;
+            $r_msg = $l_xor;
+        }
+    }
+
+    $final = $l_xor . $r_msg;
+
+    return $final;
+}
+
+
 sub DES {
     my($msg, @subkeys) = @_;
 
-    my $message = permute($msg, @IP);
+    $message = permute($msg, @IP);
+    $feistel = Feistel($message, @subkeys);
+    $final = permute($feistel, @FP);
 
+    printf("final: %s\n", $final);
 }
 
 sub main {
@@ -252,8 +285,6 @@ my $key = '1010101010111011000010010001100000100111001101101100110011011101';
 
 my @subkeys = key_schedule($key);
 DES($message, @subkeys);
-
-F('00010010001101000101011010101011','010001010110100001011000000110101011110011001110');
 
 
 # my @array = (1,2,3,4);
