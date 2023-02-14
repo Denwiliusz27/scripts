@@ -198,8 +198,8 @@ sub F {
         $b_new_elem = sprintf("%.4b", $new_elem);
         $sbox_str = $sbox_str . $b_new_elem;
     }
-    $final = permute($sbox_str, @P);
 
+    $final = permute($sbox_str, @P);
     return $final;
 }
 
@@ -223,7 +223,6 @@ sub Feistel {
     }
 
     $final = $l_xor . $r_msg;
-
     return $final;
 }
 
@@ -235,7 +234,7 @@ sub DES {
     $feistel = Feistel($message, @subkeys);
     $final = permute($feistel, @FP);
 
-    printf("final: %s\n", $final);
+    return $final;
 }
 
 sub main {
@@ -271,6 +270,85 @@ sub main {
         }
 
 
+        #tworze podklucze
+        my $key = '1010101010111011000010010001100000100111001101101100110011011101';
+        my @subkeys = key_schedule($key);
+
+        for $i (0..(scalar @subkeys - 1)){
+            # printf("subkeys: %s\n", $subkeys[$i]);
+        }
+
+        # printf("blocks: %d\n", scalar @blocks);
+        my @znaki = ();
+
+        #zakodowane
+        my @coded = ();
+
+        # koduje bloki za pomocą DES'a
+        for $i (0..(scalar @blocks - 1)){
+            printf("~~~~~~~~~~~~~~~~\n");
+            # printf("block: %s\n", $blocks[$i]);
+            $result = DES($blocks[$i], @subkeys);
+            # printf("reslt: %s\n", $result);
+
+            push @coded, $result;
+
+            for $i (0..3){
+                # printf("dodaje: %s\n", substr($result, $i * 16, 16));
+                push @znaki, substr($result, $i * 16, 16);
+            }
+        }
+
+        #zamiana bloków bitów na znaki
+        $final_msg = '';
+        # printf("len znaki: %d\n", scalar @znaki);
+
+        for $i (0..(scalar @znaki - 1)){
+            $value = oct("0b".$znaki[$i]);
+            # printf("value: %d\n", $value);
+            $final_msg = $final_msg . chr($value);
+        }
+        #zakodowane
+        printf("FINAL: '%s'\n", $final_msg);
+        printf("~~~~~~~~~~~~~~~~\n");
+
+
+
+
+        #dekodowanie
+        @decode_subkeys = ();
+
+        for $i (0..(scalar @subkeys -1)){
+            push @decode_subkeys, $subkeys[(scalar @subkeys -1) - $i];
+            # printf("decode: %s\n", $subkeys[(scalar @subkeys -1) - $i]);
+        }
+
+        @znaki_decoded = ();
+        for $i (0..(scalar @coded - 1)){
+            printf("~~~~~~~~~~~~~~~~\n");
+            printf("decode: %s\n", $coded[$i]);
+            $result = DES($coded[$i], @decode_subkeys);
+            # printf("reslt: %s\n", $result);
+
+            for $i (0..3){
+                # printf("dodaje: %s\n", substr($result, $i * 16, 16));
+                push @znaki_decoded, substr($result, $i * 16, 16);
+            }
+        }
+
+        $final_msg = '';
+        for $i (0..(scalar @znaki_decoded - 1)){
+            $value = oct("0b".$znaki_decoded[$i]);
+            # printf("value: %d\n", $value);
+            $final_msg = $final_msg . chr($value);
+        }
+        printf("FINAL: '%s'\n", $final_msg);
+        printf("~~~~~~~~~~~~~~~~\n");
+
+
+
+
+
 
 
 
@@ -280,11 +358,11 @@ sub main {
 
 main();
 
-my $message = '0001001000110100010101101010101111001101000100110010010100110110';
-my $key = '1010101010111011000010010001100000100111001101101100110011011101';
+# my $message = '0001001000110100010101101010101111001101000100110010010100110110';
+# my $key = '1010101010111011000010010001100000100111001101101100110011011101';
 
-my @subkeys = key_schedule($key);
-DES($message, @subkeys);
+# my @subkeys = key_schedule($key);
+# DES($message, @subkeys);
 
 
 # my @array = (1,2,3,4);
