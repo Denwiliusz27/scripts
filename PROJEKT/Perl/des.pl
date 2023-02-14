@@ -19,6 +19,17 @@ my @PC2 = (13, 16, 10, 23,  0,  4,  2, 27, 14,  5, 20,  9, 22, 18, 11,  3,
        25, 7, 15,  6, 26, 19, 12,  1, 40, 51, 30, 36, 46, 54, 29, 39,
        50, 44, 32, 47, 43, 48, 38, 55, 33, 52, 45, 41, 49, 35, 28, 31);
 
+my @IP = (57, 49, 41, 33, 25, 17,  9,  1, 59, 51, 43, 35, 27, 19, 11,  3, 61,
+       53, 45, 37, 29, 21, 13,  5, 63, 55, 47, 39, 31, 23, 15,  7, 56, 48,
+       40, 32, 24, 16,  8,  0, 58, 50, 42, 34, 26, 18, 10,  2, 60, 52, 44,
+       36, 28, 20, 12,  4, 62, 54, 46, 38, 30, 22, 14,  6);
+
+my @E = (31, 0, 1, 2, 3, 4, 3, 4, 5, 6, 7, 8, 7, 8, 9, 10, 11,
+     12, 11, 12, 13, 14, 15, 16, 15, 16, 17, 18, 19, 20, 19, 20, 21, 22,
+     23, 24, 23, 24, 25, 26, 27, 28, 27, 28, 29, 30, 31, 0);
+
+my @P = (15, 6, 19, 20, 28, 11, 27, 16, 0, 14, 22, 25, 4, 17, 30, 9, 1,
+     7, 23, 13, 31, 26, 2, 8, 18, 12, 29, 5, 21, 10, 3, 24);
 
 my @SBox0 = ([14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
          [0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8],
@@ -133,14 +144,66 @@ sub key_schedule {
         push @subkeys, permute($new_subkey, @PC2);
     }
 
-    # printf("subkeys: \n");
-    # for $i (0.. (scalar @subkeys - 1)){
-    #     printf("%s\n", @subkeys[$i]);
-    # }
-
     return @subkeys
 }
 
+
+sub F {
+    $msg = $_[0];
+    $subkey = $_[1];
+    my @sboxes = ();
+
+    my $right = permute($msg, @E);
+    my $right_xor = xor_binaries($right, $subkey);
+
+    $length = int(length($right_xor) / 8);
+    for $i (0..7){
+        push @sboxes, substr($right_xor, $i * $length, $length)
+    }
+
+    $sbox_str = '';
+
+    for $i (0..7){
+        $elem = $sboxes[$i];
+
+        $first_last = substr($elem, 0, 1) . substr($elem, 5, 1);
+        $row_nr = oct("0b" . $first_last);
+
+        $middle = substr($elem, 1, 4);
+        $column_nr = oct("0b" . $middle);
+
+        if ($i == 0){
+            $new_elem = $SBox0[$row_nr][$column_nr];
+        } elsif ($i == 1){
+            $new_elem = $SBox1[$row_nr][$column_nr];
+        } elsif ($i == 2){
+            $new_elem = $SBox2[$row_nr][$column_nr];
+        } elsif ($i == 3){
+            $new_elem = $SBox3[$row_nr][$column_nr];
+        } elsif ($i == 4){
+            $new_elem = $SBox4[$row_nr][$column_nr];
+        } elsif ($i == 5){
+            $new_elem = $SBox5[$row_nr][$column_nr];
+        } elsif ($i == 6){
+            $new_elem = $SBox6[$row_nr][$column_nr];
+        } else {
+            $new_elem = $SBox7[$row_nr][$column_nr];
+        }
+
+        $b_new_elem = sprintf("%.4b", $new_elem);
+        $sbox_str = $sbox_str . $b_new_elem;
+    }
+    $final = permute($sbox_str, @P);
+
+    return $final;
+}
+
+sub DES {
+    my($msg, @subkeys) = @_;
+
+    my $message = permute($msg, @IP);
+
+}
 
 sub main {
 
@@ -184,7 +247,13 @@ sub main {
 
 main();
 
-my @keys = key_schedule('1010101010111011000010010001100000100111001101101100110011011101');
+my $message = '0001001000110100010101101010101111001101000100110010010100110110';
+my $key = '1010101010111011000010010001100000100111001101101100110011011101';
+
+my @subkeys = key_schedule($key);
+DES($message, @subkeys);
+
+F('00010010001101000101011010101011','010001010110100001011000000110101011110011001110');
 
 
 # my @array = (1,2,3,4);
