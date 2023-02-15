@@ -234,12 +234,36 @@ sub DES {
 
     $message = permute($msg, @IP);
     $feistel = Feistel($message, @subkeys);
-    $final = permute($feistel, @FP);
+    $temp = permute($feistel, @FP);
+
+    printf("temp des: %s\n", $temp);
+    my $final = check_des($temp);
 
     return $final;
 }
 
+
+sub check_des {
+    $msg = $_[0];
+    $final = '';
+
+    for $i (0..3){
+        # biorę 16 bitów - jeden znak
+        $temp = substr($msg, $i * 16, 16);
+
+        if (oct("0b".$temp) >= 55292){
+            printf("jest podmiana dla %s\n", $temp);
+            $temp = '0000000001000001';
+        }
+
+        $final = $final . $temp;
+    }
+
+    return $final
+}
+
 sub read_files {
+    # my @subkeys = $_[0];
 
     for(my $n = 0; $n <= $#ARGV ; $n++){
         if (-e @ARGV[$n] ) {
@@ -289,9 +313,9 @@ sub read_files {
         # koduje bloki za pomocą DES'a
         for $i (0..(scalar @blocks - 1)){
             printf("~~~~~~~~~~~~~~~~\n");
-            # printf("block: %s\n", $blocks[$i]);
+            printf("block: %s\n", $blocks[$i]);
             $result = DES($blocks[$i], @subkeys);
-            # printf("reslt: %s\n", $result);
+            printf("reslt: %s\n", $result);
 
             push @coded, $result;
 
@@ -308,6 +332,7 @@ sub read_files {
         for $i (0..(scalar @c_blocks - 1)){
             $value = oct("0b".$c_blocks[$i]);
             # printf("value: %d\n", $value);
+
             $final_msg = $final_msg . chr($value);
         }
         #zakodowane
@@ -329,7 +354,7 @@ sub read_files {
             printf("~~~~~~~~~~~~~~~~\n");
             printf("decode: %s\n", $coded[$i]);
             $result = DES($coded[$i], @decode_subkeys);
-            # printf("reslt: %s\n", $result);
+            printf("reslt: %s\n", $result);
 
             for $i (0..3){
                 # printf("dodaje: %s\n", substr($result, $i * 16, 16));
@@ -343,7 +368,7 @@ sub read_files {
             # printf("value: %d\n", $value);
             $final_msg = $final_msg . chr($value);
         }
-        printf("FINAL: '%s'\n", $final_msg);
+        printf("FINAL dec: '%s'\n", $final_msg);
         printf("~~~~~~~~~~~~~~~~\n");
 
         close FH;
@@ -379,6 +404,8 @@ sub code_message {
     # koduje bloki za pomocą DES'a
     for $i (0..(scalar @blocks - 1)){
         $result = DES($blocks[$i], @subkeys);
+        printf("DES Result: %s\n", $result);
+
 
         for $i (0..3){
             push @c_blocks, substr($result, $i * 16, 16);
@@ -391,18 +418,18 @@ sub code_message {
 
     #zamiana bloków bitów na znaki w utf-8
     for $i (0..(scalar @c_blocks - 1)){
-        $value = oct("0b".$c_blocks[$i]);
-
-        if ($value >= 55292){
+        if (oct("0b".$c_blocks[$i]) >= 55292){
             $value = int(rand(55292));
+        } else {
+            $value = oct("0b".$c_blocks[$i]);
         }
 
-        printf("value: %s, %s\n", $value, "0b".$c_blocks[$i]);
+        # printf("value: %s, %s, %s\n", $value, chr($value), $c_blocks[$i]);
 
         $final_msg = $final_msg . chr($value);
     }
 
-    printf("FINAL: %s\n", $final);
+    printf("FINAL: %s\n", $final_msg);
 
     $filename =~ s{\.[^.]+$}{};
     $filename = $filename . '_coded.txt';
@@ -414,6 +441,8 @@ sub code_message {
     close OUT;
     close FH;
 }
+
+
 
 sub decode_message {
     my($filename, @subkeys) = @_;
@@ -434,15 +463,9 @@ sub decode_message {
             if (length(@blocks[$nr]) == 64){
                 $nr += 1;
             }
-            printf("znak: %s - %s\n", $char, sprintf("%.16b", ord($char)));
+            printf("znak: %s - %s , %s\n", $char, ord($char), sprintf("%.16b", ord($char)));
+            # printf("znak: %s - %s\n", $char, sprintf("%.16b", ord($char)));
             @blocks[$nr] = @blocks[$nr] . sprintf("%.16b", ord($char));
-        }
-    }
-
-    # dopełniam ostatni blok do 64 bitów
-    if (length(@blocks[$nr]) < 64){
-        while (length(@blocks[$nr]) < 64){
-            @blocks[$nr] = @blocks[$nr] . '0';
         }
     }
 
@@ -452,6 +475,7 @@ sub decode_message {
 
     # koduje bloki za pomocą DES'a
     for $i (0..(scalar @blocks - 1)){
+        printf("def DES: %s\n", $blocks[$i]);
         $result = DES($blocks[$i], @decode_subkeys);
 
         for $i (0..3){
@@ -480,61 +504,66 @@ sub decode_message {
 }
 
 
+
 sub main {
-    $key = '';
+    # $key = '';
+    #
+    # if ($h) {
+    #     print_help();
+    #     return;
+    # }
+    #
+    # for(my $n = 0; $n <= $#ARGV ; $n++){
+    #     if (-e @ARGV[$n]) {
+    #         if (!grep( /^@ARGV[$n]$/, @files)){
+    #             push( @files, @ARGV[$n]);
+    #         }
+    #     } elsif ($key eq '' && $n == 0) {
+    #         $key = @ARGV[$n];
+    #     } else {
+    #         printf("\n~~~~~~~~~~ERROR~~~~~~~~~~\n");
+    #         printf("Plik '%s' nie istnieje\n", @ARGV[$n]);
+    #         printf("~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
+    #     }
+    # }
+    #
+    # if  (!$k || $key eq '') {
+    #     printf("\n~~~~~~~~~~ERROR~~~~~~~~~~\n");
+    #     printf("Nie podano żadnego klucza\n");
+    #     printf("~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
+    #     return;
+    # }
+    #
+    # if ($k && length($key) != 4){
+    #     printf("\n~~~~~~~~~~ERROR~~~~~~~~~~\n");
+    #     printf("Podany klucz ma nieodpowiednią długość\n");
+    #     printf("~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
+    #     return;
+    # }
+    #
+    # if (!$c && !$d){
+    #     printf("\n~~~~~~~~~~ERROR~~~~~~~~~~\n");
+    #     printf("Nie podano wszystkich argumentów\n");
+    #     printf("~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
+    #     return;
+    # }
+    #
+    # $b_key = key_to_bits($key);
+    #
+    # @subkeys = key_schedule($b_key);
+    # $files_nr = scalar @files;
 
-    if ($h) {
-        print_help();
-        return;
-    }
+    # for(my $nr=0; $nr < $files_nr; $nr++) {
+    #     if ($d){
+    #         decode_message($files[$nr], @subkeys);
+    #     } elsif ($c){
+    #         code_message($files[$nr], @subkeys);
+    #     }
+    # }
 
-    for(my $n = 0; $n <= $#ARGV ; $n++){
-        if (-e @ARGV[$n]) {
-            if (!grep( /^@ARGV[$n]$/, @files)){
-                push( @files, @ARGV[$n]);
-            }
-        } elsif ($key eq '' && $n == 0) {
-            $key = @ARGV[$n];
-        } else {
-            printf("\n~~~~~~~~~~ERROR~~~~~~~~~~\n");
-            printf("Plik '%s' nie istnieje\n", @ARGV[$n]);
-            printf("~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
-        }
-    }
+    read_files(@subkeys);
 
-    if  (!$k || $key eq '') {
-        printf("\n~~~~~~~~~~ERROR~~~~~~~~~~\n");
-        printf("Nie podano żadnego klucza\n");
-        printf("~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
-        return;
-    }
 
-    if ($k && length($key) != 4){
-        printf("\n~~~~~~~~~~ERROR~~~~~~~~~~\n");
-        printf("Podany klucz ma nieodpowiednią długość\n");
-        printf("~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
-        return;
-    }
-
-    if (!$c && !$d){
-        printf("\n~~~~~~~~~~ERROR~~~~~~~~~~\n");
-        printf("Nie podano wszystkich argumentów\n");
-        printf("~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
-        return;
-    }
-
-    $b_key = key_to_bits($key);
-
-    @subkeys = key_schedule($b_key);
-    $files_nr = scalar @files;
-
-    for(my $nr=0; $nr < $files_nr; $nr++) {
-        if ($d){
-            decode_message($files[$nr], @subkeys);
-        } elsif ($c){
-            code_message($files[$nr], @subkeys);
-        }
-    }
 }
 
 main();
