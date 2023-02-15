@@ -4,397 +4,22 @@
 use utf8;
 use Encode;
 binmode(STDOUT, "encoding(UTF-8)");
-# use warnings FATAL => 'utf8';
 
 use Cwd qw( abs_path );
 use File::Basename qw( dirname );
 use lib dirname(abs_path($0));
-
 use des_helper;
 
-my @PC1 = (56, 48, 40, 32, 24, 16,  8,  0, 57, 49, 41, 33, 25, 17,  9,  1, 58,
-       50, 42, 34, 26, 18, 10,  2, 59, 51, 43, 35, 62, 54, 46, 38, 30, 22,
-       14,  6, 61, 53, 45, 37, 29, 21, 13,  5, 60, 52, 44, 36, 28, 20, 12,
-        4, 27, 19, 11,  3);
 
-my @PC2 = (13, 16, 10, 23,  0,  4,  2, 27, 14,  5, 20,  9, 22, 18, 11,  3,
-       25, 7, 15,  6, 26, 19, 12,  1, 40, 51, 30, 36, 46, 54, 29, 39,
-       50, 44, 32, 47, 43, 48, 38, 55, 33, 52, 45, 41, 49, 35, 28, 31);
-
-my @IP = (57, 49, 41, 33, 25, 17,  9,  1, 59, 51, 43, 35, 27, 19, 11,  3, 61,
-       53, 45, 37, 29, 21, 13,  5, 63, 55, 47, 39, 31, 23, 15,  7, 56, 48,
-       40, 32, 24, 16,  8,  0, 58, 50, 42, 34, 26, 18, 10,  2, 60, 52, 44,
-       36, 28, 20, 12,  4, 62, 54, 46, 38, 30, 22, 14,  6);
-
-my @E = (31, 0, 1, 2, 3, 4, 3, 4, 5, 6, 7, 8, 7, 8, 9, 10, 11,
-     12, 11, 12, 13, 14, 15, 16, 15, 16, 17, 18, 19, 20, 19, 20, 21, 22,
-     23, 24, 23, 24, 25, 26, 27, 28, 27, 28, 29, 30, 31, 0);
-
-my @P = (15, 6, 19, 20, 28, 11, 27, 16, 0, 14, 22, 25, 4, 17, 30, 9, 1,
-     7, 23, 13, 31, 26, 2, 8, 18, 12, 29, 5, 21, 10, 3, 24);
-
-my @FP = (39,  7, 47, 15, 55, 23, 63, 31, 38,  6, 46, 14, 54, 22, 62, 30, 37,
-        5, 45, 13, 53, 21, 61, 29, 36,  4, 44, 12, 52, 20, 60, 28, 35,  3,
-       43, 11, 51, 19, 59, 27, 34,  2, 42, 10, 50, 18, 58, 26, 33,  1, 41,
-        9, 49, 17, 57, 25, 32,  0, 40,  8, 48, 16, 56, 24);
-
-my @SBox0 = ([14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
-         [0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8],
-         [4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0],
-         [15, 12, 8, 2, 4, 9, 1, 7, 5, 11, 3, 14, 10, 0, 6, 13]);
-
-my @SBox1 = ([15, 1, 8, 14, 6, 11, 3, 4, 9, 7, 2, 13, 12, 0, 5, 10],
-         [3, 13, 4, 7, 15, 2, 8, 14, 12, 0, 1, 10, 6, 9, 11, 5],
-         [0, 14, 7, 11, 10, 4, 13, 1, 5, 8, 12, 6, 9, 3, 2, 15],
-         [13, 8, 10, 1, 3, 15, 4, 2, 11, 6, 7, 12, 0, 5, 14, 9]);
-
-my @SBox2 = ([10, 0, 9, 14, 6, 3, 15, 5, 1, 13, 12, 7, 11, 4, 2, 8],
-         [13, 7, 0, 9, 3, 4, 6, 10, 2, 8, 5, 14, 12, 11, 15, 1],
-         [13, 6, 4, 9, 8, 15, 3, 0, 11, 1, 2, 12, 5, 10, 14, 7],
-         [1, 10, 13, 0, 6, 9, 8, 7, 4, 15, 14, 3, 11, 5, 2, 12]);
-
-my @SBox3 = ([7, 13, 14, 3, 0, 6, 9, 10, 1, 2, 8, 5, 11, 12, 4, 15],
-         [13, 8, 11, 5, 6, 15, 0, 3, 4, 7, 2, 12, 1, 10, 14, 9],
-         [10, 6, 9, 0, 12, 11, 7, 13, 15, 1, 3, 14, 5, 2, 8, 4],
-         [3, 15, 0, 6, 10, 1, 13, 8, 9, 4, 5, 11, 12, 7, 2, 14]);
-
-my @SBox4 = ([2, 12, 4, 1, 7, 10, 11, 6, 8, 5, 3, 15, 13, 0, 14, 9],
-         [14, 11, 2, 12, 4, 7, 13, 1, 5, 0, 15, 10, 3, 9, 8, 6],
-         [4, 2, 1, 11, 10, 13, 7, 8, 15, 9, 12, 5, 6, 3, 0, 14],
-         [11, 8, 12, 7, 1, 14, 2, 13, 6, 15, 0, 9, 10, 4, 5, 3]);
-
-my @SBox5 = ([12, 1, 10, 15, 9, 2, 6, 8, 0, 13, 3, 4, 14, 7, 5, 11],
-         [10, 15, 4, 2, 7, 12, 9, 5, 6, 1, 13, 14, 0, 11, 3, 8],
-         [9, 14, 15, 5, 2, 8, 12, 3, 7, 0, 4, 10, 1, 13, 11, 6],
-         [4, 3, 2, 12, 9, 5, 15, 10, 11, 14, 1, 7, 6, 0, 8, 13]);
-
-my @SBox6 = ([4, 11, 2, 14, 15, 0, 8, 13, 3, 12, 9, 7, 5, 10, 6, 1],
-         [13, 0, 11, 7, 4, 9, 1, 10, 14, 3, 5, 12, 2, 15, 8, 6],
-         [1, 4, 11, 13, 12, 3, 7, 14, 10, 15, 6, 8, 0, 5, 9, 2],
-         [6, 11, 13, 8, 1, 4, 10, 7, 9, 5, 0, 15, 14, 2, 3, 12]);
-
-my @SBox7 = ([13, 2, 8, 4, 6, 15, 11, 1, 10, 9, 3, 14, 5, 0, 12, 7],
-         [1, 15, 13, 8, 10, 3, 7, 4, 12, 5, 6, 11, 0, 14, 9, 2],
-         [7, 11, 4, 1, 9, 12, 14, 2, 0, 6, 10, 13, 15, 3, 5, 8],
-         [2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11]);
-
-my @shift_table = (1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1 );
-
-
-sub permute {
-    my($temp, @perm) = @_;
-    my @txt = split("", $temp);
-    my $permuted = '';
-
-    for my $i (@perm){
-        $permuted = $permuted . $txt[$i];
-    }
-
-    return $permuted;
-}
-
-
-sub xor_binaries {
-    my $result = '';
-    my @bin1 = split("", $_[0]);
-    my @bin2 = split("", $_[1]);
-
-    for $i (0..(scalar @bin1 -1)){
-        if ($bin1[$i] == $bin2[$i]){
-            $result = $result . '0';
-        } else {
-            $result = $result . '1';
-        }
-    }
-
-    return $result;
-}
-
-
-sub shift_left {
-    my @string = split("", $_[1]);
-    my $n = $_[0];
-
-    for $i (1..$n){
-        my $temp = @string[0];
-
-        for $j (0..(scalar @string - 1)){
-            if ($j == (scalar @string - 1)){
-                @string[$j] = $temp;
-            } else {
-                @string[$j] = @string[$j+1];
-            }
-        }
-
-    }
-
-    my $result = join '', @string;
-    return $result;
-}
-
-
-sub key_schedule {
-    my @subkeys = ();
-    my $key = $_[0];
-
-    my $new_key = permute($key, @PC1);
-    my $l_key = substr($new_key, 0, length($new_key)/2);
-    my $r_key = substr($new_key, length($new_key)/2, length($new_key));
-
-    for $i (0..(scalar @shift_table - 1)){
-        my $new_subkey = '';
-
-        $l_key= shift_left($shift_table[$i], $l_key);
-        $r_key = shift_left($shift_table[$i], $r_key);
-        $new_subkey = $l_key . $r_key;
-
-        push @subkeys, permute($new_subkey, @PC2);
-    }
-
-    return @subkeys
-}
-
-
-sub F {
-    $msg = $_[0];
-    $subkey = $_[1];
-    my @sboxes = ();
-
-    my $right = permute($msg, @E);
-    my $right_xor = xor_binaries($right, $subkey);
-
-    $length = int(length($right_xor) / 8);
-    for $i (0..7){
-        push @sboxes, substr($right_xor, $i * $length, $length)
-    }
-
-    $sbox_str = '';
-
-    for $i (0..7){
-        $elem = $sboxes[$i];
-
-        $first_last = substr($elem, 0, 1) . substr($elem, 5, 1);
-        $row_nr = oct("0b" . $first_last);
-
-        $middle = substr($elem, 1, 4);
-        $column_nr = oct("0b" . $middle);
-
-        if ($i == 0){
-            $new_elem = $SBox0[$row_nr][$column_nr];
-        } elsif ($i == 1){
-            $new_elem = $SBox1[$row_nr][$column_nr];
-        } elsif ($i == 2){
-            $new_elem = $SBox2[$row_nr][$column_nr];
-        } elsif ($i == 3){
-            $new_elem = $SBox3[$row_nr][$column_nr];
-        } elsif ($i == 4){
-            $new_elem = $SBox4[$row_nr][$column_nr];
-        } elsif ($i == 5){
-            $new_elem = $SBox5[$row_nr][$column_nr];
-        } elsif ($i == 6){
-            $new_elem = $SBox6[$row_nr][$column_nr];
-        } else {
-            $new_elem = $SBox7[$row_nr][$column_nr];
-        }
-
-        $b_new_elem = sprintf("%.4b", $new_elem);
-        $sbox_str = $sbox_str . $b_new_elem;
-    }
-
-    $final = permute($sbox_str, @P);
-    return $final;
-}
-
-
-sub Feistel {
-    my($message, @subkeys) = @_;
-    $length = int(length($message) / 2);
-
-    $l_msg = substr($message, 0, $length);
-    $r_msg = substr($message, $length, $length);
-
-    for $i (0..15){
-        $r_msg_f = F($r_msg, $subkeys[$i]);
-
-        $l_xor = xor_binaries($l_msg, $r_msg_f);
-
-        if ($i < 15){
-            $l_msg = $r_msg;
-            $r_msg = $l_xor;
-        }
-    }
-
-    $final = $l_xor . $r_msg;
-    return $final;
-}
-
-
-sub DES {
-    my($msg,@subkeys) = @_;
-
-    $message = permute($msg, @IP);
-    $feistel = Feistel($message, @subkeys);
-    $final = permute($feistel, @FP);
-
-    # if ($option eq 'c'){
-    #     my $final = check_des($temp);
-    # } else {
-    #     my $final = $temp;
-    # }
-
-    return $final;
-}
-
-
-sub check_des {
-    $msg = $_[0];
-    $final = '';
-
-    for $i (0..3){
-        # biorę 16 bitów - jeden znak
-        $temp = substr($msg, $i * 16, 16);
-
-        if (oct("0b".$temp) >= 55292){
-            printf("jest podmiana dla %s\n", $temp);
-            $temp = '0000000001000001';
-        }
-
-        $final = $final . $temp;
-    }
-
-    return $final
-}
-
-
-sub read_files {
-    # my @subkeys = $_[0];
-
-    for(my $n = 0; $n <= $#ARGV ; $n++){
-        if (-e @ARGV[$n] ) {
-            push( @files, @ARGV[$n]);
-        }
-    }
-
-    $files_nr = scalar @files;
-
-    for(my $nr=0; $nr < $files_nr; $nr++) {
-        my @blocks;
-        my $nr = 0;
-
-        # open(FH, "<:encoding(UTF-8)", @files[$nr]);
-
-        open($fh, '<', @files[$nr]);
-        binmode $fh;
-
-        my $data = <$fh>;
-        $data =~ s/\x00/\ /gi;
-
-        printf("data: %s\n", <$fh>);
-
-        # while(<FH>) {
-        #     printf("line: '%s'\n", $_);
-        #     foreach $char (split('', $_)){
-        #         if (length(@blocks[$nr]) == 64){
-        #             $nr += 1;
-        #         }
-        #         @blocks[$nr] = @blocks[$nr] . sprintf("%.16b", ord($char));
-        #     }
-        # }
-
-        if (length(@blocks[$nr]) < 64){
-            while (length(@blocks[$nr]) < 64){
-                @blocks[$nr] = @blocks[$nr] . '0';
-            }
-        }
-
-
-        #tworze podklucze
-        my $key = '1010101010111011000010010001100000100111001101101100110011011101';
-        my @subkeys = key_schedule($key);
-
-        for $i (0..(scalar @subkeys - 1)){
-            # printf("subkeys: %s\n", $subkeys[$i]);
-        }
-
-        # printf("blocks: %d\n", scalar @blocks);
-        my @c_blocks = ();
-
-        #zakodowane
-        my @coded = ();
-
-        # koduje bloki za pomocą DES'a
-        for $i (0..(scalar @blocks - 1)){
-            printf("~~~~~~~~~~~~~~~~\n");
-            printf("block: %s\n", $blocks[$i]);
-            $result = DES($blocks[$i], @subkeys);
-            printf("reslt: %s\n", $result);
-
-            push @coded, $result;
-
-            for $i (0..3){
-                # printf("dodaje: %s\n", substr($result, $i * 16, 16));
-                push @c_blocks, substr($result, $i * 16, 16);
-            }
-        }
-
-        #zamiana bloków bitów na c_blocks
-        $final_msg = '';
-        # printf("len c_blocks: %d\n", scalar @c_blocks);
-
-        for $i (0..(scalar @c_blocks - 1)){
-            $value = oct("0b".$c_blocks[$i]);
-            # printf("value: %d\n", $value);
-
-            $final_msg = $final_msg . chr($value);
-        }
-        #zakodowane
-        printf("FINAL: '%s'\n", $final_msg);
-        printf("~~~~~~~~~~~~~~~~\n");
-
-
-
-        #dekodowanie
-        @decode_subkeys = ();
-
-        for $i (0..(scalar @subkeys -1)){
-            push @decode_subkeys, $subkeys[(scalar @subkeys -1) - $i];
-            # printf("decode: %s\n", $subkeys[(scalar @subkeys -1) - $i]);
-        }
-
-        @c_blocks_decoded = ();
-        for $i (0..(scalar @coded - 1)){
-            printf("~~~~~~~~~~~~~~~~\n");
-            printf("decode: %s\n", $coded[$i]);
-            $result = DES($coded[$i], @decode_subkeys);
-            printf("reslt: %s\n", $result);
-
-            for $i (0..3){
-                # printf("dodaje: %s\n", substr($result, $i * 16, 16));
-                push @c_blocks_decoded, substr($result, $i * 16, 16);
-            }
-        }
-
-        $final_msg = '';
-        for $i (0..(scalar @c_blocks_decoded - 1)){
-            $value = oct("0b".$c_blocks_decoded[$i]);
-            # printf("value: %d\n", $value);
-            $final_msg = $final_msg . chr($value);
-        }
-        printf("FINAL dec: '%s'\n", $final_msg);
-        printf("~~~~~~~~~~~~~~~~\n");
-
-        close FH;
-    }
-}
-
+#koduje wiadomość z pliku o podanej nazwie i zapisuje w nowym pliku
 sub code_message {
     my($filename, @subkeys) = @_;
     my @blocks;
     my $nr = 0;
 
-    open(FH, "<:encoding(UTF-8)", $filename); # "<:encoding(UTF-8)"
+    open(FH, "<:encoding(UTF-8)", $filename);
 
-    # odczytuje plik, zamianiam c_blocks na ciągi 16 bitów
+    # odczytuje plik, zamianiam oczytane znaki na ciągi 16 bitowe
     while(<FH>) {
         foreach $char (split('', $_)){
             if (length(@blocks[$nr]) == 64){
@@ -413,11 +38,11 @@ sub code_message {
 
     my @c_blocks = ();
 
-    # koduje bloki za pomocą DES'a
+    # koduje bloki bitów za pomocą DES'a
     for $i (0..(scalar @blocks - 1)){
         $result = DES($blocks[$i], @subkeys);
-        # printf("DES Result: %s\n", $result);
 
+        # wynik DES'a zapisuję jako bloki 8-bitowe
         for $i (0..7){
             push @c_blocks, substr($result, $i * 8, 8);
         }
@@ -428,16 +53,11 @@ sub code_message {
     #zamiana bloków bitów na znaki w utf-8
     for $i (0..(scalar @c_blocks - 1)){
         $value = oct("0b".$c_blocks[$i]);
-
-        # printf("value: %s, %s, %s\n", $value, chr($value), $c_blocks[$i]);
-
         $final_msg = $final_msg . chr($value);
     }
 
-    # printf("FINAL coded: %s\n", $final_msg);
-
     $filename =~ s{\.[^.]+$}{};
-    $filename = $filename . '_coded.txt';
+    $filename = $filename . '.zaszyfrowany';
     $new_filename =  $filename;
 
     open (OUT, ">$new_filename");
@@ -448,7 +68,7 @@ sub code_message {
 }
 
 
-
+# odkodowuje wiadomość z podanego pliku i zapisuje w pliku wynikowym
 sub decode_message {
     my($filename, @subkeys) = @_;
     my @blocks;
@@ -460,7 +80,7 @@ sub decode_message {
         push @decode_subkeys, $subkeys[(scalar @subkeys -1) - $i];
     }
 
-    open(FH, "<:encoding(UTF-8)", $filename); # "<:encoding(UTF-8)"
+    open(FH, "<:encoding(UTF-8)", $filename);
 
     # odczytuje plik, zamianiam znaki na ciągi 16 bitów
     while(<FH>) {
@@ -468,7 +88,6 @@ sub decode_message {
             if (length(@blocks[$nr]) == 64){
                 $nr += 1;
             }
-            # printf("znak: %s - %s , %s\n", $char, ord($char), sprintf("%.8b", ord($char)));
             @blocks[$nr] = @blocks[$nr] . sprintf("%.8b", ord($char));
         }
     }
@@ -484,30 +103,23 @@ sub decode_message {
         }
     }
 
-    # printf("blocks: ");
-    # print @blocks, "\n";
-
-
     $final_msg = '';
 
     #zamiana bloków bitów na znaki w utf-8
     for $i (0..(scalar @c_blocks - 1)){
         $value = oct("0b".$c_blocks[$i]);
         if ($value != 0 ){
-            printf("odkod: %s, %s\n", chr($value), $c_blocks[$i]);
             $final_msg = $final_msg . chr($value);
         }
-
     }
 
     $filename =~ s{\.[^.]+$}{};
-    $filename = $filename . '_decoded.txt';
+    $filename = $filename . '.odszyfrowany';
     $new_filename =  $filename;
 
     open (OUT, ">$new_filename");
     binmode(OUT, ":utf8");
     print OUT $final_msg;
-    printf("FINAL dec: %s\n", $final_msg);
     close OUT;
     close FH;
 }
@@ -532,6 +144,7 @@ sub main {
             printf("\n~~~~~~~~~~ERROR~~~~~~~~~~\n");
             printf("Plik '%s' nie istnieje\n", @ARGV[$n]);
             printf("~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
+            return;
         }
     }
 
@@ -557,9 +170,15 @@ sub main {
     }
 
     $b_key = key_to_bits($key);
-
     @subkeys = key_schedule($b_key);
     $files_nr = scalar @files;
+
+    if ($files_nr == 0){
+        printf("\n~~~~~~~~~~ERROR~~~~~~~~~~\n");
+        printf("Nie podano żadnego pliku\n");
+        printf("~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
+        return;
+    }
 
     for(my $nr=0; $nr < $files_nr; $nr++) {
         if ($d){
@@ -568,10 +187,6 @@ sub main {
             code_message($files[$nr], @subkeys);
         }
     }
-
-    # read_files(@subkeys);
-
-
 }
 
 main();
