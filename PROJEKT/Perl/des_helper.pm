@@ -89,7 +89,7 @@ sub print_help {
     printf("- jeden lub kilka plików tekstowych zawierających wiadomości do zaszyfrowania.\n");
     printf("Przykład wywołania:\n");
     printf("        perl des.pl -c -k baca test.txt\n");
-    printf("W wyniku takiego wywołania utworzony zostanie plik 'test.zaszyfrowane' z zaszyfrowaną\n");
+    printf("W wyniku takiego wywołania utworzony zostanie plik 'test.zaszyfrowany' z zaszyfrowaną\n");
     printf("wiadomością.\n");
 
     printf("\nW celu ODSZYFROWANIA wiadomości należy jako argumenty wywołania programu podać:\n");

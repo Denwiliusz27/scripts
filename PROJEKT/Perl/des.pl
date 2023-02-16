@@ -117,6 +117,10 @@ sub decode_message {
     $filename = $filename . '.odszyfrowany';
     $new_filename =  $filename;
 
+    if ($final_msg =~ /[^\x{0000}-\x{D7FF}]/) {
+        $final_msg = Encode::encode('utf8', $final_msg);
+    }
+
     open (OUT, ">$new_filename");
     binmode(OUT, ":utf8");
     print OUT $final_msg;
@@ -165,6 +169,13 @@ sub main {
     if (!$c && !$d){
         printf("\n~~~~~~~~~~ERROR~~~~~~~~~~\n");
         printf("Nie podano wszystkich argumentów\n");
+        printf("~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
+        return;
+    }
+
+    if ($c && $d){
+        printf("\n~~~~~~~~~~ERROR~~~~~~~~~~\n");
+        printf("Naeży wybrać tylko jedną z opcji '-c'/'-d'\n");
         printf("~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
         return;
     }
