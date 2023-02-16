@@ -3,17 +3,15 @@
 
 export LANG=C.UTF-8
 
-declare -g -A dictionary=( ["a"]=1 ["ą"]=2 ["A"]=3 ["Ą"]=4 ["b"]=5 ["B"]=6 ["c"]=7 ["ć"]=8 ["C"]=9 ["Ć"]=10
-                           ["d"]=11 ["D"]=12 ["e"]=13 ["ę"]=14 ["E"]=15 ["Ę"]=16 ["f"]=17 ["F"]=18 ["g"]=19
-                           ["G"]=20 ["h"]=21 ["H"]=22 ["i"]=23 ["I"]=24 ["j"]=25 ["J"]=26 ["k"]=27 ["K"]=28
-                           ["l"]=29 ["ł"]=30 ["L"]=31 ["Ł"]=32 ["m"]=33 ["M"]=34 ["n"]=35 ["N"]=36 ["ń"]=37
-                           ["Ń"]=38 ["o"]=49 ["O"]=50 ["ó"]=51 ["Ó"]=52 ["p"]=53 ["P"]=54 ["q"]=55 ["Q"]=56
-                           ["r"]=57 ["R"]=58 ["s"]=59 ["S"]=60 ["ś"]=61 ["Ś"]=62 ["t"]=63 ["T"]=64 ["u"]=65
-                           ["U"]=66 ["v"]=67 ["V"]=68 ["w"]=69 ["W"]=70 ["x"]=71 ["X"]=72 ["y"]=73 ["Y"]=74
-                           ["z"]=75 ["Z"]=76 ["ż"]=77 ["Ż"]=78 ["ź"]=79 ["Ź"]=80 [","]=81 ["."]=82 ["?"]=83
-                           [":"]=84 [";"]=85 ["("]=86 [")"]=87 ["["]=88 ["]"]=89 ["{"]=90 ["}"]=91 ["-"]=92
-                           ["+"]=93 ["="]=94 ["1"]=95 ["2"]=96 ["3"]=97 ["4"]=98 ["5"]=99 ["6"]=100 ["7"]=101
-                           ["8"]=102 ["9"]=103 ["0"]=104 )
+declare -g -A dictionary=( ["a"]=0 ["ą"]=1 ["A"]=2 ["Ą"]=3 ["b"]=4 ["B"]=5 ["c"]=6 ["ć"]=7 ["C"]=8 ["Ć"]=9
+                           ["d"]=10 ["D"]=11 ["e"]=12 ["ę"]=13 ["E"]=14 ["Ę"]=15 ["f"]=16 ["F"]=17 ["g"]=18
+                           ["G"]=19 ["h"]=20 ["H"]=21 ["i"]=22 ["I"]=23 ["j"]=24 ["J"]=25 ["k"]=26 ["K"]=27
+                           ["l"]=28 ["ł"]=29 ["L"]=30 ["Ł"]=31 ["m"]=32 ["M"]=33 ["n"]=34 ["N"]=35 ["ń"]=36
+                           ["Ń"]=37 ["o"]=38 ["O"]=39 ["ó"]=40 ["Ó"]=41 ["p"]=42 ["P"]=43 ["q"]=44 ["Q"]=45
+                           ["r"]=46 ["R"]=47 ["s"]=48 ["S"]=49 ["ś"]=50 ["Ś"]=51 ["t"]=52 ["T"]=53 ["u"]=54
+                           ["U"]=55 ["v"]=56 ["V"]=57 ["w"]=58 ["W"]=59 ["x"]=60 ["X"]=61 ["y"]=62 ["Y"]=63
+                           ["z"]=64 ["Z"]=65 ["ż"]=66 ["Ż"]=67 ["ź"]=68 ["Ź"]=69 ["1"]=70 ["2"]=71 ["3"]=72
+                           ["4"]=73 ["5"]=74 ["6"]=75 ["7"]=76 ["8"]=77 ["9"]=78 ["0"]=79 )
 
 display_help() {
   echo
@@ -54,6 +52,7 @@ display_no_option_error() {
   echo
 }
 
+
 display_too_many_options_error(){
   echo
   echo "~~~~~~ ERROR ~~~~~"
@@ -61,6 +60,7 @@ display_too_many_options_error(){
   echo "~~~~~~~~~~~~~~~~~~"
   echo
 }
+
 
 display_no_key_error(){
   echo
@@ -70,6 +70,7 @@ display_no_key_error(){
   echo
 }
 
+
 display_no_files_error(){
   echo
   echo "~~~~~~ ERROR ~~~~~"
@@ -77,6 +78,7 @@ display_no_files_error(){
   echo "~~~~~~~~~~~~~~~~~~"
   echo
 }
+
 
 display_few_arg_error(){
   echo
@@ -86,17 +88,82 @@ display_few_arg_error(){
   echo
 }
 
+
+display_file_not_exist(){
+  echo
+  echo "~~~~~~ ERROR ~~~~~"
+  echo "Plik '$1' nie istnieje"
+  echo "~~~~~~~~~~~~~~~~~~"
+  echo
+}
+
+
 Vigenere_code(){
-  message=$0
-  key=$1
+  file=$1
+  key=$2
+  result=""
+  nr=0
 
+  echo "plik: $file"
+  while IFS= read -r line; do
+    for (( i=0; i<${#line}; i++)); do
+      char=${line:i:1}
 
+      if [[ -v "dictionary[$char]" ]]; then
+        echo "~~~~~~~~~~"
+
+        # pozycja czytanego znaku z wiadomości
+        position=${dictionary[$char]}
+        echo "chr: $char - pos: $position "
+
+        # wyliczenie przesunięcia jako nr pozycji w alfabecie znaku z klucza
+        val=$((nr%${#key}))
+        key_char=${key:val:1}
+        shift=${dictionary[$key_char]}
+#        echo "key: $key_char - shift: $shift"
+
+        new_pos=$(( $position + $shift ))
+        new_pos=$((new_pos%${#dictionary[@]}))
+#        echo "new_pos: $new_pos"
+
+        new_char=${dictionary_r[$new_pos]}
+#        echo "dodaje: $new_char"
+        result="$result$new_char"
+        nr=$(( $nr + 1 ))
+
+      else
+        result="$result$char"
+        echo "$char nie jest"
+      fi
+
+      echo "RESULT: $result"
+    done
+
+    newline=$'\n'
+    result="$result${newline}"
+  done <$file
+
+  echo "RESULT: $result"
+
+  new_file=$(basename -- "$file")
+  new_file="${new_file%.*}"
+  new_file="$new_file.zaszyfrowany"
+
+  echo "nowy plik: $new_file"
+
+  echo "$result" > "$new_file"
 }
 
 
 files=()
 option=""
 file_option=false
+declare -g -A dictionary_r
+
+# tworzę słownik par wartość - litera
+for key in "${!dictionary[@]}"; do
+  dictionary_r["${dictionary[$key]}"]=$key
+done
 
 for ((i=1;i<=$#;i++));
 do
@@ -107,28 +174,20 @@ do
 
   a=$((i-1))
 
-  echo "i: ${!i}"
-  echo "a: ${!a}"
-
   if [ "${!i}" == "-c" ] || [ "${!i}" == "-d" ]; then
     if [ "$option" == "" ]; then
-      echo "jest opcja ${!i}"
       option=${!i}
     else
       display_too_many_options_error
       exit 1
-
     fi
   fi
 
   if [ "${!a}" == "-k" ]; then
-    echo "mam klucz: ${!i}"
     key=${!i}
   fi
 
-
   if [ "${!a}" == "-f" ] || [ "$file_option" = true ]; then
-    echo "mam plik "
     files+=(${!i})
     file_option=true
   fi
@@ -155,6 +214,17 @@ if [ $# -lt 5 ]; then
 fi
 
 for file in "${files[@]}"; do
-  echo "plik: $file"
+  if [ -f "$file" ]; then
+
+    if [ "$option" == "-c" ]; then
+      Vigenere_code $file $key
+    else
+      echo "decrypt"
+    fi
+  else
+    display_file_not_exist $file
+    exit 1
+  fi
+
 done
 
