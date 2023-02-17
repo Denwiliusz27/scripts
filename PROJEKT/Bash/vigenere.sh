@@ -1,8 +1,6 @@
 #!/bin/bash
 #Daniel Wielgosz (g1)
 
-export LANG=C.UTF-8
-
 declare -g -A dictionary=( ["a"]=0 ["ą"]=1 ["A"]=2 ["Ą"]=3 ["b"]=4 ["B"]=5 ["c"]=6 ["ć"]=7 ["C"]=8 ["Ć"]=9
                            ["d"]=10 ["D"]=11 ["e"]=12 ["ę"]=13 ["E"]=14 ["Ę"]=15 ["f"]=16 ["F"]=17 ["g"]=18
                            ["G"]=19 ["h"]=20 ["H"]=21 ["i"]=22 ["I"]=23 ["j"]=24 ["J"]=25 ["k"]=26 ["K"]=27
@@ -14,31 +12,38 @@ declare -g -A dictionary=( ["a"]=0 ["ą"]=1 ["A"]=2 ["Ą"]=3 ["b"]=4 ["B"]=5 ["c
                            ["4"]=73 ["5"]=74 ["6"]=75 ["7"]=76 ["8"]=77 ["9"]=78 ["0"]=79 )
 
 display_help() {
+  option=$1
+  if [ "${option:0:2}" != './' ]; then
+    option="bash $1"
+  fi
+
   echo
   echo "~~~~~~~~~~~~~~~~~~~~~~~~ OPIS ~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-  echo "Program służy do szyfrowania oraz odszyfrowywania wiadomości"
-  echo "przy pomocy algorytmu Vigenere."
+  echo "Program służy do szyfrowania oraz odszyfrowywania wiadomości przy pomocy"
+  echo "algorytmu Vigenere."
   echo "W celu ZASZYFROWANIA wiadomości należy podać jako argumenty "
   echo "wywołania programu:"
   echo "- opcję '-c' oznaczającą chęć zaszyfrowania wiadomości,"
-  echo "- klucz, będący ciągiem dowolnych znaków. Klucz należy poprzedzić opcją '-k',"
+  echo "- klucz, będący ciągiem dowolnych znaków. Klucz* należy poprzedzić opcją '-k',"
   echo "- jeden lub kilka plików tekstowych zawierających wiadomości do zaszyfrowania."
   echo "  Przed podaniem pierwszego pliku, należy podać również opcję '-f'"
   echo "Przykład wywołania programu:"
-  echo "    perl -c -k mojklucz -f test.txt"
+  echo "    $option -c -k mojklucz -f test.txt"
   echo "W wyniku takiego wywołania utworzony zostanie plik 'test.zaszyfrowany'"
   echo "z zaszyfrowaną wiadomością."
   echo
   echo "W celu ODSZYFROWANIA wiadomości należy podać jako argumenty "
   echo "wywołania programu:"
   echo "- opcję '-d' oznaczającą chęć odszyfrowania wiadomości,"
-  echo "- klucz, będący ciągiem dowolnych znaków. Klucz należy poprzedzić opcją '-k',"
+  echo "- klucz, będący ciągiem dowolnych znaków. Klucz* należy poprzedzić opcją '-k',"
   echo "- jeden lub kilka plików tekstowych zawierających wiadomości do odszyfrowania."
   echo "  Nazwę pierwszego pliku należy poprzedzić opcją '-f'"
   echo "Przykład wywołania programu:"
-  echo "    perl -d -k mojklucz -f test.zaszyfrowany"
+  echo "    $option -d -k mojklucz -f test.zaszyfrowany"
   echo "W wyniku takiego wywołania utworzony zostanie plik 'test.odszyfrowany'"
   echo "z odszyfrowaną wiadomością."
+  echo
+  echo "*klucz powinien składać się jedynie z kodów ASCII"
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
   echo
 }
@@ -98,42 +103,46 @@ display_file_not_exist(){
 }
 
 
+# oblicza nowy znak na podstawie danego znaku i klucza
+get_new_char(){
+  char=$1
+  nr=$2
+  key=$3
+
+  # pozycja czytanego znaku z wiadomości
+  position=${dictionary[$char]}
+
+  # wyliczenie przesunięcia jako nr pozycji w alfabecie znaku z klucza
+  val=$((nr%${#key}))
+  key_char=${key:val:1}
+  shift=${dictionary[$key_char]}
+
+  # wyliczenie pozycji nowego znaku w słowniku
+  new_pos=$(( $position + $shift ))
+  new_pos=$((new_pos%${#dictionary[@]}))
+
+  new_char=${dictionary_r[$new_pos]}
+  echo "$new_char"
+}
+
+
+# koduje wiadomość zapisaną w pliku za pomocą klucza
 Vigenere_code(){
   file=$1
   key=$2
   result=""
   nr=0
 
-#  exec 3< "$file"
-#  while IFS='' read -r -u 3 line; do
   while IFS= read -r line || [ "$line" ]; do
     for (( i=0; i<${#line}; i++)); do
       char=${line:i:1}
 
       if [[ -v "dictionary[$char]" ]]; then
-#        echo "~~~~~~~~~~~~~~"
-
-        # pozycja czytanego znaku z wiadomości
-        position=${dictionary[$char]}
-#        echo "char: $char - $position"
-
-        # wyliczenie przesunięcia jako nr pozycji w alfabecie znaku z klucza
-        val=$((nr%${#key}))
-        key_char=${key:val:1}
-        shift=${dictionary[$key_char]}
-
-        new_pos=$(( $position + $shift ))
-        new_pos=$((new_pos%${#dictionary[@]}))
-
-#        echo "key: $key_char - $shift"
-
-        new_char=${dictionary_r[$new_pos]}
+        new_char=$(get_new_char $char $nr $key)
         result="$result$new_char"
         nr=$(( $nr + 1 ))
 
-#        echo "NEW: $new_char - $new_pos"
       else
-#        echo "$char inny"
         result="$result$char"
       fi
     done
@@ -146,6 +155,7 @@ Vigenere_code(){
 }
 
 
+#odkodowuje wiadomość z podanego pliku przy użyciu klucza
 Vigenere_decode(){
   file=$1
   key=$2
@@ -167,17 +177,25 @@ Vigenere_decode(){
 files=()
 option=""
 file_option=false
+compile_option=""
 declare -g -A dictionary_r
 
 # tworzę słownik par wartość - litera
-for key in "${!dictionary[@]}"; do
-  dictionary_r["${dictionary[$key]}"]=$key
+for char in "${!dictionary[@]}"; do
+  dictionary_r["${dictionary[$char]}"]=$char
 done
 
-for ((i=1;i<=$#;i++));
+
+#odczytywanie argumentów wywołania
+for ((i=0;i<=$#;i++));
 do
+  if [ $i -eq 0 ]; then
+    compile_option=${!i}
+    continue
+  fi
+
   if [ "${!i}" == "-h" ] || [ "${!i}" == "--help" ]; then
-    display_help
+    display_help $compile_option
     exit 0
   fi
 
@@ -220,14 +238,15 @@ fi
 
 if [ $# -lt 5 ]; then
   display_few_arg_error
+  exit 1
 fi
 
+# kodowanie lub odkodowanie dla listy plików
 for file in "${files[@]}"; do
   if [ -f "$file" ]; then
 
     if [ "$option" == "-c" ]; then
       result=$(Vigenere_code $file $key)
-#      Vigenere_code $file $key
 
       new_file=$(basename -- "$file")
       new_file="${new_file%.*}"
@@ -247,3 +266,5 @@ for file in "${files[@]}"; do
     exit 1
   fi
 done
+
+exit 0
