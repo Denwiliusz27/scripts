@@ -2,8 +2,6 @@
 
 package des_helper;
 
-# use strict;
-# use warnings;
 use utf8;
 use Exporter;
 
@@ -81,6 +79,12 @@ my @shift_table = (1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1 );
 
 
 sub print_help {
+    $option = $_[0];
+
+    if (substr($option, 0, 2) ne "./") {
+        $option = "perl " . $option
+    }
+
     printf("\n~~~~~~~~~~~~~~~~~~ OPIS ~~~~~~~~~~~~~~~~~~~\n");
     printf("Program służy do szyfracji oraz deszyfracji wiadomości przy pomocy algorytmu DES.\n");
     printf("\nW celu ZASZYFROWANIA wiadomości należy jako argumenty wywołania programu podać:\n");
@@ -88,7 +92,7 @@ sub print_help {
     printf("- klucz, będący ciągiem 4 dowolnych znaków. Klucz należy poprzedzić opcją '-k',\n");
     printf("- jeden lub kilka plików tekstowych zawierających wiadomości do zaszyfrowania.\n");
     printf("Przykład wywołania:\n");
-    printf("        perl des.pl -c -k baca test.txt\n");
+    printf("        %s -c -k baca test.txt\n", $option);
     printf("W wyniku takiego wywołania utworzony zostanie plik 'test.zaszyfrowany' z zaszyfrowaną\n");
     printf("wiadomością.\n");
 
@@ -97,7 +101,7 @@ sub print_help {
     printf("- klucz, będący ciągiem 4 dowolnych znaków. Klucz* należy poprzedzić opcją '-k',\n");
     printf("- jeden lub kilka plików tekstowych zawierających wiadomości do zaszyfrowania.\n");
     printf("Przykład wywołania:\n");
-    printf("        perl des.pl -d -k baca test.zaszyfrowany\n");
+    printf("        %s -d -k baca test.zaszyfrowany\n", $option);
     printf("W wyniku takiego wywołania utworzony zostanie plik 'test.odszyfrowany' z odszyfrowaną\n");
     printf("wiadomością.\n");
 

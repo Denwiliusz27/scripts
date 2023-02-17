@@ -133,7 +133,7 @@ sub main {
     $key = '';
 
     if ($h) {
-        print_help();
+        print_help($0);
         return;
     }
 
