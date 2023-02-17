@@ -104,54 +104,63 @@ Vigenere_code(){
   result=""
   nr=0
 
-  echo "plik: $file"
-  while IFS= read -r line; do
+#  exec 3< "$file"
+#  while IFS='' read -r -u 3 line; do
+  while IFS= read -r line || [ "$line" ]; do
     for (( i=0; i<${#line}; i++)); do
       char=${line:i:1}
 
       if [[ -v "dictionary[$char]" ]]; then
-        echo "~~~~~~~~~~"
+#        echo "~~~~~~~~~~~~~~"
 
         # pozycja czytanego znaku z wiadomości
         position=${dictionary[$char]}
-        echo "chr: $char - pos: $position "
+#        echo "char: $char - $position"
 
         # wyliczenie przesunięcia jako nr pozycji w alfabecie znaku z klucza
         val=$((nr%${#key}))
         key_char=${key:val:1}
         shift=${dictionary[$key_char]}
-#        echo "key: $key_char - shift: $shift"
 
         new_pos=$(( $position + $shift ))
         new_pos=$((new_pos%${#dictionary[@]}))
-#        echo "new_pos: $new_pos"
+
+#        echo "key: $key_char - $shift"
 
         new_char=${dictionary_r[$new_pos]}
-#        echo "dodaje: $new_char"
         result="$result$new_char"
         nr=$(( $nr + 1 ))
 
+#        echo "NEW: $new_char - $new_pos"
       else
+#        echo "$char inny"
         result="$result$char"
-        echo "$char nie jest"
       fi
-
-      echo "RESULT: $result"
     done
 
     newline=$'\n'
     result="$result${newline}"
   done <$file
 
-  echo "RESULT: $result"
+  echo "$result"
+}
 
-  new_file=$(basename -- "$file")
-  new_file="${new_file%.*}"
-  new_file="$new_file.zaszyfrowany"
 
-  echo "nowy plik: $new_file"
+Vigenere_decode(){
+  file=$1
+  key=$2
+  new_key=""
 
-  echo "$result" > "$new_file"
+  #odwrócenie klucza
+  for (( i=0; i<${#key}; i++)); do
+    char=${key:i:1}
+    value=$((${#dictionary[@]}-${dictionary[$char]}))
+    new_char_pos=$(($value % ${#dictionary[@]}))
+    new_key="$new_key${dictionary_r[$new_char_pos]}"
+  done
+
+  result=$(Vigenere_code $file $new_key)
+  echo "$result"
 }
 
 
@@ -217,14 +226,24 @@ for file in "${files[@]}"; do
   if [ -f "$file" ]; then
 
     if [ "$option" == "-c" ]; then
-      Vigenere_code $file $key
+      result=$(Vigenere_code $file $key)
+#      Vigenere_code $file $key
+
+      new_file=$(basename -- "$file")
+      new_file="${new_file%.*}"
+      new_file="$new_file.zaszyfrowany"
+      echo "$result" > "$new_file"
+
     else
-      echo "decrypt"
+      result=$(Vigenere_decode $file $key)
+
+      new_file=$(basename -- "$file")
+      new_file="${new_file%.*}"
+      new_file="$new_file.odszyfrowany"
+      echo "$result" > "$new_file"
     fi
   else
     display_file_not_exist $file
     exit 1
   fi
-
 done
-
