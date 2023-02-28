@@ -6,6 +6,8 @@ use File::Basename qw( dirname );
 use lib dirname(abs_path($0));
 use checkNumber;
 
+open (STDOUT, ">/dev/null");
+
 sub changeName {
     $name = lc($_[0]);
     $name =~ s/(\w+)/\u$1/g;
@@ -15,7 +17,7 @@ sub changeName {
 
 sub printError {
     $_[2]=~ s/^\s+|\s+$//g;
-    printf("ERROR w linii %d (%s): '%s'\n", $_[1], $_[0], $_[2]);
+    printf STDOUT "ERROR w linii %d (%s): '%s'\n", $_[1], $_[0], $_[2];
 }
 
 @files = ();
@@ -67,22 +69,22 @@ for(my $i=0; $i < $files_nr; $i++){
     @files[$i] = @files[$i].'.oceny';
     $file_name =  @files[$i];
 
-    open(OF, '>' , "$file_name" ) or die 'ERROR: nie udalo sie utworzyc pliku\n';
+    # open(OF, '>' , "$file_name" ) or die 'ERROR: nie udalo sie utworzyc pliku\n';>\
 
     $all_avg = 0;
     foreach $k (sort keys %grades){
-        print OF "$k: ";
+        print STDOUT "$k: ";
 
         $grades_nr = scalar @{$grades{$k}};
 
         for(my $nr = 1; $nr < $grades_nr; $nr++){
-            print OF "@{$grades{$k}}[$nr] ";
+            print STDOUT "@{$grades{$k}}[$nr] ";
         }
 
         $avg = @{$grades{$k}}[0] / ($grades_nr-1);
         $avg = sprintf("%.2f", $avg);
         $all_avg += $avg;
-        print OF ": $avg \n";
+        print STDOUT ": $avg \n";
     }
 
     @keys = keys %grades;
@@ -90,7 +92,8 @@ for(my $i=0; $i < $files_nr; $i++){
     $all_avg = $all_avg / $keys_nr;
     $all_avg = sprintf("%.2f", $all_avg);
 
-    print OF "\nŚrednia wszystkich: $all_avg \n";
+    print STDOUT "\nŚrednia wszystkich: $all_avg \n";
 
-    close(OF);
+    # close(OF);
+    close(STDOUT);
 }
